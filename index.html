@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Es wird mal wieder Zeit</title>
+<style>
+  :root {
+    --pink: #e0447b;
+    --pink-dark: #c22d63;
+    --bg-1: #f5e6e8;
+    --bg-2: #ece2ec;
+    --text: #3a2e35;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+  }
+  body {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, var(--bg-1), var(--bg-2));
+    padding: 20px;
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+    overscroll-behavior: none;
+  }
+  .app {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+  }
+  .card {
+    position: relative;
+    background: #fffdfc;
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(60, 20, 40, 0.15);
+    padding: 36px 24px 28px;
+    text-align: center;
+    overflow: hidden;
+    min-height: 340px;
+  }
+  .card.hidden { display: none; }
+
+  .emoji { font-size: 44px; margin-bottom: 8px; }
+
+  h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 24px;
+    line-height: 1.3;
+    margin: 0 0 8px;
+  }
+
+  .subtitle {
+    font-size: 15px;
+    color: #8a7a82;
+    margin: 0 0 32px;
+  }
+
+  .button-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    height: 52px;
+  }
+
+  .btn {
+    border: none;
+    border-radius: 14px;
+    padding: 14px 26px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    user-select: none;
+    transition: transform 0.15s ease;
+  }
+
+  .btn-no {
+    background: #ece7e8;
+    color: #6b5d63;
+    transition: left 0.16s ease, top 0.16s ease;
+    z-index: 2;
+  }
+
+  .btn-yes {
+    background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(224, 68, 123, 0.35);
+  }
+
+  .btn-yes:active { transform: scale(0.97); }
+
+  .btn-yes:disabled {
+    background: #ddd4d8;
+    color: #a89aa1;
+    box-shadow: none;
+    cursor: default;
+  }
+
+  footer.note {
+    margin-top: 22px;
+    font-size: 13px;
+    color: #b7a6ae;
+    font-style: italic;
+  }
+
+  /* --- Calendar --- */
+  .cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .cal-header span {
+    font-family: Georgia, serif;
+    font-size: 17px;
+  }
+  .cal-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    font-size: 12px;
+    color: #a89aa1;
+    margin-bottom: 6px;
+  }
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    row-gap: 6px;
+  }
+  .day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--text);
+  }
+  .day.empty { cursor: default; }
+  .day.past { color: #ddd3d8; cursor: default; }
+  .day:not(.empty):not(.past):hover { background: #f3e2e8; }
+  .day.selected {
+    background: var(--pink);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .time-picker {
+    margin: 24px 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 14px;
+  }
+  .time-picker input[type="time"] {
+    border: 1px solid #e6dbe0;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 15px;
+    font-family: inherit;
+  }
+
+  .confirm-btn {
+    width: 100%;
+    margin-top: 18px;
+    background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .confirm-btn:disabled {
+    background: #ddd4d8;
+    color: #a89aa1;
+    cursor: default;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="card" id="card1">
+    <div class="emoji">💗</div>
+    <h1>Sophia, willst du mit mir<br>ein Date haben?</h1>
+    <p class="subtitle">Ich verspreche, es lohnt sich ✨</p>
+    <div class="button-row">
+      <button class="btn btn-no" id="noBtn">Nein</button>
+      <button class="btn btn-yes" id="yesBtn">Ja! 💕</button>
+    </div>
+    <footer class="note">Es wird mal wieder Zeit</footer>
+  </div>
+
+  <div class="card hidden" id="card2">
+    <div class="emoji">🌸</div>
+    <h1>Wähl Tag &amp; Uhrzeit</h1>
+    <p class="subtitle">Wann passt es dir am besten?</p>
+
+    <div class="cal-header">
+      <span id="monthLabel"></span>
+    </div>
+    <div class="cal-weekdays">
+      <div>Mo</div><div>Di</div><div>Mi</div><div>Do</div><div>Fr</div><div>Sa</div><div>So</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+
+    <div class="time-picker">
+      <label for="timeInput">Uhrzeit:</label>
+      <input type="time" id="timeInput" value="19:00">
+    </div>
+
+    <button class="confirm-btn" id="confirmBtn" disabled>Erst einen Tag wählen</button>
+    <footer class="note">Es wird mal wieder Zeit</footer>
+  </div>
+
+</div>
+
+<script>
+  // --- Card 1: dodging "Nein" button ---
+  const card1 = document.getElementById('card1');
+  const card2 = document.getElementById('card2');
+  const noBtn = document.getElementById('noBtn');
+  const yesBtn = document.getElementById('yesBtn');
+  const subtitle1 = card1.querySelector('.subtitle');
+  const footer1 = card1.querySelector('footer.note');
+
+  let lastDodge = 0;
+  const AVOID_RADIUS = 100; // px kept clear around the tap/click point when picking a new spot
+  const EDGE_MARGIN = 14;   // px kept clear from the card's white edges
+
+  function eventPoint(e) {
+    if (e && typeof e.clientX === 'number' && (e.clientX !== 0 || e.clientY !== 0)) {
+      return { x: e.clientX, y: e.clientY };
+    }
+    return null;
+  }
+
+  // Lock "Ja" to its current on-screen spot the first time "Nein" starts
+  // dodging, so it no longer re-centers itself once "Nein" leaves the flow.
+  let yesFrozen = false;
+  function freezeYes() {
+    if (yesFrozen) return;
+    yesFrozen = true;
+    const cardRect = card1.getBoundingClientRect();
+    const yesRect = yesBtn.getBoundingClientRect();
+    yesBtn.style.position = 'absolute';
+    yesBtn.style.left = (yesRect.left - cardRect.left) + 'px';
+    yesBtn.style.top = (yesRect.top - cardRect.top) + 'px';
+  }
+
+  function dodge(e) {
+    const now = performance.now();
+    if (now - lastDodge < 60) return; // ignore duplicate pointerenter+pointerdown firing
+    lastDodge = now;
+    freezeYes();
+
+    const cardRect = card1.getBoundingClientRect();
+    const subRect = subtitle1.getBoundingClientRect();
+    const footRect = footer1.getBoundingClientRect();
+    const btnRect = noBtn.getBoundingClientRect();
+
+    const minX = cardRect.left + EDGE_MARGIN;
+    const maxX = cardRect.right - EDGE_MARGIN - btnRect.width;
+    const minY = subRect.bottom + EDGE_MARGIN;
+    const maxY = footRect.top - EDGE_MARGIN - btnRect.height;
+
+    if (maxX <= minX || maxY <= minY) return; // safety net, shouldn't happen
+
+    const avoid = eventPoint(e);
+    const yesRect = yesBtn.getBoundingClientRect();
+    const YES_GAP = 10; // px kept clear around "Ja" so "Nein" can never sit in front of it
+
+    function overlapsYes(px, py) {
+      return !(
+        px + btnRect.width + YES_GAP < yesRect.left ||
+        yesRect.right + YES_GAP < px ||
+        py + btnRect.height + YES_GAP < yesRect.top ||
+        yesRect.bottom + YES_GAP < py
+      );
+    }
+
+    let x, y, tries = 0;
+    do {
+      x = minX + Math.random() * (maxX - minX);
+      y = minY + Math.random() * (maxY - minY);
+      tries++;
+    } while (
+      tries < 30 &&
+      (
+        overlapsYes(x, y) ||
+        (avoid && Math.hypot((x + btnRect.width / 2) - avoid.x, (y + btnRect.height / 2) - avoid.y) < AVOID_RADIUS)
+      )
+    );
+
+    // Fallback: if random attempts kept landing near the cursor, jump to the
+    // safe-zone corner that is farthest away from it (never one that covers "Ja").
+    if (avoid && tries >= 30) {
+      const corners = [
+        { x: minX, y: minY }, { x: maxX, y: minY },
+        { x: minX, y: maxY }, { x: maxX, y: maxY },
+      ].filter((c) => !overlapsYes(c.x, c.y));
+      if (corners.length) {
+        corners.sort((a, b) =>
+          Math.hypot((b.x + btnRect.width / 2) - avoid.x, (b.y + btnRect.height / 2) - avoid.y) -
+          Math.hypot((a.x + btnRect.width / 2) - avoid.x, (a.y + btnRect.height / 2) - avoid.y)
+        );
+        x = corners[0].x;
+        y = corners[0].y;
+      }
+    }
+
+    noBtn.style.position = 'absolute';
+    noBtn.style.left = (x - cardRect.left) + 'px';
+    noBtn.style.top = (y - cardRect.top) + 'px';
+  }
+
+  // Same behavior on every device: no hover chasing, just reposition on tap/click.
+  noBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); dodge(e); });
+  noBtn.addEventListener('click', (e) => { e.preventDefault(); dodge(e); });
+
+  yesBtn.addEventListener('click', () => {
+    card1.classList.add('hidden');
+    card2.classList.remove('hidden');
+    renderCalendar();
+  });
+
+  // --- Card 2: calendar ---
+  const monthLabel = document.getElementById('monthLabel');
+  const calGrid = document.getElementById('calGrid');
+  const timeInput = document.getElementById('timeInput');
+  const confirmBtn = document.getElementById('confirmBtn');
+
+  const monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+  // Only this single date can be picked - the calendar opens straight on it.
+  const TARGET_YEAR = 2027;
+  const TARGET_MONTH = 5; // Juni (0-indexed)
+  const TARGET_DAY = 12;
+
+  const viewYear = TARGET_YEAR;
+  const viewMonth = TARGET_MONTH;
+  let selectedDate = null;
+
+  function renderCalendar() {
+    monthLabel.textContent = monthNames[viewMonth] + ' ' + viewYear;
+    calGrid.innerHTML = '';
+
+    const firstDay = new Date(viewYear, viewMonth, 1);
+    const startWeekday = (firstDay.getDay() + 6) % 7; // Montag = 0 ... Sonntag = 6
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+    for (let i = 0; i < startWeekday; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'day empty';
+      calGrid.appendChild(empty);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cellDate = new Date(viewYear, viewMonth, d);
+      const btn = document.createElement('button');
+      btn.className = 'day';
+      btn.textContent = d;
+
+      if (d === TARGET_DAY) {
+        btn.addEventListener('click', () => selectDay(cellDate, btn));
+      } else {
+        btn.classList.add('past');
+        btn.disabled = true;
+      }
+
+      if (selectedDate && cellDate.getTime() === selectedDate.getTime()) {
+        btn.classList.add('selected');
+      }
+
+      calGrid.appendChild(btn);
+    }
+  }
+
+  function selectDay(date, btn) {
+    selectedDate = date;
+    document.querySelectorAll('.day.selected').forEach(el => el.classList.remove('selected'));
+    btn.classList.add('selected');
+    updateConfirmState();
+  }
+
+  function updateConfirmState() {
+    if (selectedDate) {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Per WhatsApp bestätigen 💌';
+    } else {
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Erst einen Tag wählen';
+    }
+  }
+
+  const weekdayNames = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+
+  confirmBtn.addEventListener('click', () => {
+    if (!selectedDate) return;
+    const weekday = weekdayNames[selectedDate.getDay()];
+    const dateStr = weekday + ', ' + selectedDate.getDate() + '. ' + monthNames[selectedDate.getMonth()] + ' ' + selectedDate.getFullYear();
+    const time = timeInput.value;
+    const message = 'Ja! Ich hab Lust auf unser Date am ' + dateStr + ' um ' + time + ' Uhr 💕 Es wird mal wieder Zeit!';
+    const url = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(message);
+    window.location.href = url;
+  });
+</script>
+
+</body>
+</html>
