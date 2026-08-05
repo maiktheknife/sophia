@@ -295,33 +295,30 @@
     }
 
     let x, y, tries = 0;
+    const MAX_TRIES = 40;
     do {
       x = minX + Math.random() * (maxX - minX);
       y = minY + Math.random() * (maxY - minY);
       tries++;
     } while (
-      tries < 30 &&
+      tries < MAX_TRIES &&
       (
         overlapsYes(x, y) ||
         (avoid && Math.hypot((x + btnRect.width / 2) - avoid.x, (y + btnRect.height / 2) - avoid.y) < AVOID_RADIUS)
       )
     );
 
-    // Fallback: if random attempts kept landing near the cursor, jump to the
-    // safe-zone corner that is farthest away from it (never one that covers "Ja").
-    if (avoid && tries >= 30) {
-      const corners = [
-        { x: minX, y: minY }, { x: maxX, y: minY },
-        { x: minX, y: maxY }, { x: maxX, y: maxY },
-      ].filter((c) => !overlapsYes(c.x, c.y));
-      if (corners.length) {
-        corners.sort((a, b) =>
-          Math.hypot((b.x + btnRect.width / 2) - avoid.x, (b.y + btnRect.height / 2) - avoid.y) -
-          Math.hypot((a.x + btnRect.width / 2) - avoid.x, (a.y + btnRect.height / 2) - avoid.y)
-        );
-        x = corners[0].x;
-        y = corners[0].y;
-      }
+    // On a cramped mobile safe zone, satisfying both constraints at once can
+    // fail entirely. Drop the (secondary) cursor-avoidance requirement and
+    // keep sampling freely across the full zone - never collapse to a fixed
+    // corner/column, since that made it look like it only ever moved on one axis.
+    if (tries >= MAX_TRIES) {
+      tries = 0;
+      do {
+        x = minX + Math.random() * (maxX - minX);
+        y = minY + Math.random() * (maxY - minY);
+        tries++;
+      } while (tries < MAX_TRIES && overlapsYes(x, y));
     }
 
     noBtn.style.position = 'absolute';
