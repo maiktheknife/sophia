@@ -236,8 +236,6 @@
   const card2 = document.getElementById('card2');
   const noBtn = document.getElementById('noBtn');
   const yesBtn = document.getElementById('yesBtn');
-  const subtitle1 = card1.querySelector('.subtitle');
-  const footer1 = card1.querySelector('footer.note');
 
   let lastDodge = 0;
   const AVOID_RADIUS = 100; // px kept clear around the tap/click point when picking a new spot
@@ -270,14 +268,12 @@
     freezeYes();
 
     const cardRect = card1.getBoundingClientRect();
-    const subRect = subtitle1.getBoundingClientRect();
-    const footRect = footer1.getBoundingClientRect();
     const btnRect = noBtn.getBoundingClientRect();
 
     const minX = cardRect.left + EDGE_MARGIN;
     const maxX = cardRect.right - EDGE_MARGIN - btnRect.width;
-    const minY = subRect.bottom + EDGE_MARGIN;
-    const maxY = footRect.top - EDGE_MARGIN - btnRect.height;
+    const minY = cardRect.top + EDGE_MARGIN;
+    const maxY = cardRect.bottom - EDGE_MARGIN - btnRect.height;
 
     if (maxX <= minX || maxY <= minY) return; // safety net, shouldn't happen
 
